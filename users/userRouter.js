@@ -5,26 +5,23 @@ const router = express.Router();
 const userDb = require("./userDb");
 const postDb = require("../posts/postDb");
 
-router.post("/", (req, res) => {
+router.post("/", validateUser, (req, res) => {
   userDb
     .insert(req.body)
     .then((user) => {
       res.status(201).json(user);
     })
     .catch((err) => {
-      res.status(500).json({ error: "Something went wrong" });
+      console.log(err);
+      res.status(500).json({ error: err});
     });
 });
 
-router.post("/:id/posts", validateUserId, (req, res) => {
-  if(!req.body.text || !req.body.user_id){
-    res.status(400).json({message: "Please include a text and user_id properties"})
-  } else{
-    postDb.insert(req.body)
+router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
+  postDb.insert(req.body)
     .then( post =>{
       res.status(201).json(post)
     })
-  }
 });
 
 router.get("/", (req, res) => {
@@ -89,11 +86,19 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if(!req.body.name){
+    res.status(400).json({message: 'User must contain a name property'})
+  } else {
+    next()
+  }
 }
 
 function validatePost(req, res, next) {
-  // do your magic!
+  if(!req.body.text || !req.body.user_id){
+    res.status(400).json({message: "Please include a text and user_id properties"})
+  } else{
+    next()
+  }
 }
 
 module.exports = router;
